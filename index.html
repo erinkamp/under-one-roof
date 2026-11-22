@@ -47,7 +47,7 @@ document.getElementById('transferfile').addEventListener('change',async e=>{
  try{
  if(file.size>250000){transferStatus('File is too large.');return}
  const data=JSON.parse(await file.text());
- if(data.format!=='under-one-roof-property-transfer'||data.version!==1||!Array.isArray(data.improvements)||!Array.isArray(data.appliances)||data.improvements.length>500||data.appliances.length>500)throw Error('That file isn't an Under One Roof home-history file');
+ if(data.format!=='under-one-roof-property-transfer'||data.version!==1||!Array.isArray(data.improvements)||!Array.isArray(data.appliances)||data.improvements.length>500||data.appliances.length>500)throw Error("That file isn't an Under One Roof home-history file");
  const p=reportProperty();if(!cloudUser||!p)throw Error('Choose the home receiving this history');
  if(!confirm('Import '+data.improvements.length+' improvements and '+data.appliances.length+' appliances into '+p.nickname+'? Existing records will be kept. Review imported information for accuracy.'))return;
  const clean=(v)=>typeof v==='string'?v.slice(0,500):'';
