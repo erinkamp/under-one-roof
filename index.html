@@ -96,4 +96,26 @@ function resetImprovementForm(){editingImprovementId=null;document.getElementByI
 function renderImprovements(){const root=document.getElementById('improvementlist');if(!root)return;root.replaceChildren();const records=improvementRecords().slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));document.getElementById('improvementcount').textContent=records.length;if(!records.length){root.append(el('p','No improvements or maintenance recorded for this property yet.','muted'));return}for(const x of records){const row=el('div',undefined,'item'),info=el('div'),actions=el('div',undefined,'actions');info.append(el('strong',x.name),el('small',[x.type,x.date?'Completed: '+x.date:'',x.contractor,x.warranty?'Warranty until '+x.warranty:''].filter(Boolean).join(' · ')));if(x.notes)info.append(el('small',x.notes));if(validURL(x.document)){const link=el('a','View document ↗');link.href=validURL(x.document);link.target='_blank';link.rel='noopener noreferrer';info.append(link)}const edit=el('button','Edit','btn secondary'),del=el('button','Remove','btn danger');edit.onclick=()=>{editingImprovementId=x.id;for(const [id,key] of Object.entries({ititle:'name',itype:'type',idate:'date',icontractor:'contractor',icost:'cost',iwarranty:'warranty',idocument:'document',inotes:'notes'}))document.getElementById(id).value=x[key]||'';document.getElementById('improvementsubmit').textContent='Update entry';document.getElementById('improvementcancel').hidden=false;document.getElementById('improvementform').scrollIntoView({behavior:'smooth',block:'start'})};del.onclick=()=>{if(confirm('Remove this home history entry?')){if(saveImprovements(improvementRecords().filter(a=>a.id!==x.id))){renderImprovements();buildReport()}}};actions.append(edit,del);row.append(info,actions);root.append(row)}}
 document.getElementById('improvementcancel').onclick=resetImprovementForm;
 document.getElementById('improvementform').addEventListener('submit',e=>{e.preventDefault();const v=id=>document.getElementById(id).value.trim(),documentUrl=v('idocument');if(documentUrl&&!validURL(documentUrl)){document.getElementById('improvementstatus').textContent='Enter a valid https or http document link.';return}const obj={id:editingImprovementId||crypto.randomUUID(),category:'Home Improvement',name:v('ititle'),type:v('itype'),date:v('idate'),contractor:v('icontractor'),cost:v('icost'),warranty:v('iwarranty'),document:documentUrl,notes:v('inotes')};const items=improvementRecords();const i=items.findIndex(x=>x.id===obj.id);if(i>=0)items[i]=obj;else items.unshift(obj);if(saveImprovements(items)){resetImprovementForm();renderImprovements();buildReport();document.getElementById('improvementstatus').textContent='Home history entry saved.'}});
+</script><script>
+/* Independent navigation: keeps the site usable if an optional feature fails. */
+(function(){
+ function navigate(id){
+  if(!document.getElementById(id)||!document.getElementById(id).classList.contains('section'))id='home';
+  document.querySelectorAll('main .section').forEach(function(section){section.classList.toggle('active',section.id===id)});
+  document.querySelectorAll('[data-tab]').forEach(function(button){button.classList.toggle('active',button.dataset.tab===id)});
+  document.querySelectorAll('.moremenu').forEach(function(menu){menu.open=false});
+ }
+ document.addEventListener('click',function(event){
+  var button=event.target.closest('[data-tab],[data-go]');
+  if(!button)return;
+  var id=button.dataset.tab||button.dataset.go;
+  if(!id)return;
+  event.preventDefault();
+  navigate(id);
+  if(location.hash!=='#'+id)history.pushState(null,'','#'+id);
+ },true);
+ window.addEventListener('hashchange',function(){navigate(decodeURIComponent(location.hash.slice(1))||'home')});
+ window.addEventListener('popstate',function(){navigate(decodeURIComponent(location.hash.slice(1))||'home')});
+ navigate(decodeURIComponent(location.hash.slice(1))||'home');
+})();
 </script></body></html>
