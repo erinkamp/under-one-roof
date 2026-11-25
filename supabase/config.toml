@@ -1,0 +1,5 @@
+project_id = "every-bit-of-home"
+
+[functions.homeowner-test-checkout]
+# Checkout validates the signed-in test user. Stripe callbacks validate their signature.
+verify_jwt = false
