@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Every Bit of Home | Checkout test</title>
+<style>
+body{font:1rem system-ui,sans-serif;color:#263544;background:#f5f6f5;margin:0;padding:2rem}
+main{max-width:34rem;margin:8vh auto;padding:2rem;background:white;border:1px solid #d6dce2;border-radius:1rem}
+button{font:inherit;padding:.75rem 1rem;border:0;border-radius:.5rem;background:#263544;color:white}
+button:disabled{opacity:.65} a{color:#324f68}
+</style>
+</head>
+<body>
+<main>
+<h1>Homeowner checkout test</h1>
+<p>Run a $6.99 simulated payment in the Every Bit of Home Stripe sandbox.</p>
+<button id="checkout" type="button" disabled>Open Stripe test checkout</button>
+<p id="status" role="status">Checking your sign-in…</p>
+<a href="/#home">Return to Every Bit of Home</a>
+</main>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const client = createClient(
+  'https://xmticmudzljzjeoozege.supabase.co',
+  'sb_publishable_hCM4D7RBtM9eGPK5PKjdbQ_AgkshG5u'
+);
+const button = document.querySelector('#checkout');
+const status = document.querySelector('#status');
+try {
+  const { data: { session }, error } = await client.auth.getSession();
+  if (error) throw error;
+  if (session) {
+    status.textContent = 'Checkout is available to the designated test account.';
+    button.disabled = false;
+  } else {
+    status.textContent = 'Sign in to Every Bit of Home with the test account, then reopen this page.';
+  }
+} catch {
+  status.textContent = 'Unable to check your sign-in. Please refresh and try again.';
+}
+
+button.addEventListener('click', async () => {
+  button.disabled = true;
+  status.textContent = 'Opening Stripe…';
+  try {
+    const { data, error } = await client.functions.invoke('homeowner-test-checkout', { body: {} });
+    if (error) {
+      const httpStatus = error.context?.status;
+      if (httpStatus === 401 || httpStatus === 403) {
+        status.textContent = 'Sign in with the designated test account to continue.';
+      } else if (httpStatus === 409) {
+        status.textContent = 'This account already has portfolio access.';
+      } else {
+        status.textContent = 'Test checkout could not start. Please try again.';
+      }
+      return;
+    }
+    const url = new URL(data.url);
+    if (url.origin !== 'https://checkout.stripe.com') throw new Error('Unexpected checkout origin');
+    location.assign(url);
+  } catch {
+    status.textContent = 'Test checkout could not start. Please try again.';
+  } finally {
+    button.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
